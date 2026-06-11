@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <title>鉄拳8 戦績カウンター</title>
+    <style>
+        /* 画面全体のレイアウト設定 */
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background-color: #1e1e24;
+            font-family: 'Segoe UI', Meiryo, sans-serif;
+            color: #f5f5f7;
+            overflow: hidden;
+        }
+
+        body {
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            font-size: 1.3rem;
+            margin: 0 0 10px 0;
+            color: #ff4757;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            flex-shrink: 0;
+        }
+
+        /* グレーの外枠。縦横の伸縮に連動 */
+        .container {
+            width: 100%;
+            max-width: 100%;
+            background-color: #2a2a35;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            box-sizing: border-box;
+
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+            flex-shrink: 0;
+        }
+
+        label {
+            display: block;
+            font-size: 0.8rem;
+            margin-bottom: 4px;
+            color: #a0a0b0;
+        }
+
+        select {
+            width: 100%;
+            padding: 8px 10px;
+            background-color: #1e1e24;
+            color: #ffffff;
+            border: 2px solid #3e3e50;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            box-sizing: border-box;
+        }
+
+        select:focus {
+            border-color: #ff4757;
+            outline: none;
+        }
+
+        /* カウンター表示 */
+        .counter-display {
+            display: flex;
+            justify-content: space-around;
+            background-color: #1e1e24;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .counter-box h2 {
+            margin: 0;
+            font-size: 0.75rem;
+            color: #a0a0b0;
+        }
+
+        .counter-box p {
+            margin: 3px 0 0 0;
+            font-size: 1.6rem;
+            font-weight: bold;
+        }
+
+        .win-color {
+            color: #2ed573;
+        }
+
+        .lose-color {
+            color: #ff4757;
+        }
+
+        .rate-color {
+            color: #eccc68;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 15px;
+            flex-shrink: 0;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        .btn-win {
+            background-color: #2ed573;
+            color: #fff;
+        }
+
+        .btn-lose {
+            background-color: #ff4757;
+            color: #fff;
+        }
+
+        .history-title {
+            font-size: 0.85rem;
+            border-bottom: 2px solid #3e3e50;
+            padding-bottom: 3px;
+            margin-bottom: 8px;
+            color: #ff4757;
+            flex-shrink: 0;
+        }
+
+        /* 【最適化】履歴エリア：余った縦幅を100%独占して伸縮する */
+        .history-list {
+            flex: 1 1 auto;
+            overflow-y: auto;
+            padding-right: 5px;
+            min-height: 0;
+        }
+
+        .history-item {
+            background-color: #1e1e24;
+            padding: 8px 10px;
+            margin-bottom: 5px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 4px solid #3e3e50;
+            flex-shrink: 0;
+            /* 履歴の1行が縦に潰れるのを防ぐ */
+        }
+
+        .item-win {
+            border-left-color: #2ed573;
+        }
+
+        .item-lose {
+            border-left-color: #ff4757;
+        }
+
+        .char-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .char-text {
+            font-size: 0.75rem;
+            color: #a0a0b0;
+        }
+
+        .time-text {
+            font-size: 0.7rem;
+            color: #707080;
+        }
+
+        .result-text {
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        /* 【最適化】リセットボタン：縦への拡大を完全に禁止 */
+        .clear-btn {
+            background-color: #3e3e50;
+            color: #a0a0b0;
+            font-size: 0.75rem;
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin-top: 15px;
+            width: 100%;
+            cursor: pointer;
+            border: none;
+
+            /* 縦の伸縮に一切関与させない固定的命令 */
+            flex: 0 0 auto;
+            height: 32px;
+            /* 高さを一定に固定 */
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            transition: background-color 0.1s;
+        }
+
+        .clear-btn:hover {
+            background-color: #4e4e65;
+            color: #ffffff;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>TEKKEN 8 COUNTER</h1>
+
+    <div class="container">
+        <div class="form-group">
+            <label for="my-char-select">使用キャラクター（自分）</label>
+            <select id="my-char-select"></select>
+        </div>
+
+        <div class="form-group">
+            <label for="opp-char-select">対戦相手（相手）</label>
+            <select id="opp-char-select"></select>
+        </div>
+
+        <div class="counter-display">
+            <div class="counter-box">
+                <h2>WIN</h2>
+                <p id="total-wins" class="win-color">0</p>
+            </div>
+            <div class="counter-box">
+                <h2>LOSE</h2>
+                <p id="total-loses" class="lose-color">0</p>
+            </div>
+            <div class="counter-box">
+                <h2>WIN RATE</h2>
+                <p id="win-rate" class="rate-color">0%</p>
+            </div>
+        </div>
+
+        <div class="btn-group">
+            <button class="btn-win" onclick="recordMatch('WIN')">WIN</button>
+            <button class="btn-lose" onclick="recordMatch('LOSE')">LOSE</button>
+        </div>
+
+        <div class="history-title">直近の対戦履歴</div>
+        <div id="history-list" class="history-list"></div>
+
+        <button class="clear-btn" onclick="clearHistory()">データをすべてリセット</button>
+    </div>
+
+    <script>
+        const characterList = [
+            "アーマーキング", "アズセナ", "飛鳥", "アリサ", "アンナ", "一八", "ヴィクター", "エディ",
+            "キング", "クマ", "クラウディオ", "クライヴ", "州光", "ザフィーナ", "ジャック8", "シャオユウ",
+            "シャヒーン", "準", "仁", "スティーブ", "デビル仁", "ドラグノフ", "ニーナ", "範馬 勇次郎",
+            "パンダ", "平八", "ファラン", "ファーカムラム", "フェン", "ブライアン", "ボブ", "ポール",
+            "ミアリズ", "吉光", "ラース", "リディア", "リリ", "リロイ", "リー", "レイヴン", "麗奈",
+            "レオ", "ロジャーJr.", "ロウ"
+        ];
+
+        function initDropdowns() {
+            const mySelect = document.getElementById('my-char-select');
+            const oppSelect = document.getElementById('opp-char-select');
+
+            mySelect.innerHTML = '';
+            oppSelect.innerHTML = '';
+
+            characterList.forEach(char => {
+                const optMy = document.createElement('option');
+                optMy.value = char;
+                optMy.textContent = char;
+                mySelect.appendChild(optMy);
+
+                const optOpp = document.createElement('option');
+                optOpp.value = char;
+                optOpp.textContent = char;
+                oppSelect.appendChild(optOpp);
+            });
+
+            mySelect.value = "仁";
+            oppSelect.value = "一八";
+        }
+
+        let matchHistory = JSON.parse(localStorage.getItem('t8_counter_v3')) || [];
+
+        function formatTimestamp(ms) {
+            if (!ms) return "日時不明";
+            const d = new Date(ms);
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const date = String(d.getDate()).padStart(2, '0');
+            const hours = String(d.getHours()).padStart(2, '0');
+            const minutes = String(d.getMinutes()).padStart(2, '0');
+            return `${year}/${month}/${date} ${hours}:${minutes}`;
+        }
+
+        function updateDisplay() {
+            let wins = 0;
+            let loses = 0;
+
+            const listContainer = document.getElementById('history-list');
+            listContainer.innerHTML = '';
+
+            for (let i = matchHistory.length - 1; i >= 0; i--) {
+                const match = matchHistory[i];
+
+                if (match.result === 'WIN') wins++;
+                if (match.result === 'LOSE') loses++;
+
+                const timeString = formatTimestamp(match.timestamp);
+
+                const item = document.createElement('div');
+                const resultClass = match.result === 'WIN' ? 'item-win' : 'item-lose';
+                item.className = `history-item ${resultClass}`;
+
+                item.innerHTML = `
+          <div class="char-info">
+            <strong>${match.oppChar}</strong> <span class="char-text">(対戦相手)</span>
+            <span class="char-text">使用: ${match.myChar}</span>
+            <span class="time-text">${timeString}</span>
+          </div>
+          <span class="result-text"><strong>${match.result}</strong></span>
+        `;
+                listContainer.appendChild(item);
+            }
+
+            const total = wins + loses;
+            const rate = total > 0 ? Math.round((wins / total) * 100) : 0;
+
+            document.getElementById('total-wins').innerText = wins;
+            document.getElementById('total-loses').innerText = loses;
+            document.getElementById('win-rate').innerText = `${rate}%`;
+        }
+
+        function recordMatch(result) {
+            const myChar = document.getElementById('my-char-select').value;
+            const oppChar = document.getElementById('opp-char-select').value;
+
+            const newMatch = {
+                myChar: myChar,
+                oppChar: oppChar,
+                result: result,
+                timestamp: new Date().getTime()
+            };
+
+            matchHistory.push(newMatch);
+            localStorage.setItem('t8_counter_v3', JSON.stringify(matchHistory));
+            updateDisplay();
+        }
+
+        function clearHistory() {
+            if (confirm('すべての戦績データを削除します。よろしいですか？')) {
+                matchHistory = [];
+                localStorage.removeItem('t8_counter_v3');
+                updateDisplay();
+            }
+        }
+
+        initDropdowns();
+        updateDisplay();
+    </script>
+</body>
+
+</html>
