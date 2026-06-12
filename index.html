@@ -327,6 +327,18 @@
             border: none;
             flex-shrink: 0;
         }
+
+        /* 6文字以上の長い名前（アーマーキング・ファーカムラム）専用の微調整 */
+        .char-btn.long-name {
+            font-size: 0.62rem !important;
+            /* 通常（0.72rem）より一回り縮小 */
+            letter-spacing: -0.5px;
+            /* 文字の間隔をわずかに詰める */
+            transform: scaleX(0.95);
+            /* 横幅だけを5%圧縮してはみ出しを防止 */
+            padding: 6px 0px;
+            /* 左右の余白を削って文字領域を確保 */
+        }
     </style>
 </head>
 
@@ -424,6 +436,29 @@
                 btn.textContent = char;
                 // クリックしたら勝敗入力ポップアップを開く
                 btn.onclick = () => openResultModal(char);
+                grid.appendChild(btn);
+            });
+
+            highlightCurrentOpponent();
+        }
+
+        // 対戦相手ボタン一覧（グリッド）の動的生成（修正版）
+        function initOpponentGrid() {
+            const grid = document.getElementById('char-grid');
+            grid.innerHTML = '';
+
+            characterList.forEach(char => {
+                const btn = document.createElement('button');
+                btn.className = 'char-btn';
+
+                // 【追加】6文字以上のキャラ名に専用のクラスを付与
+                if (char.length >= 6) {
+                    btn.classList.add('long-name');
+                }
+
+                btn.id = 'btn-' + char;
+                btn.textContent = char;
+                btn.onclick = function () { openResultModal(char); };
                 grid.appendChild(btn);
             });
 
