@@ -18,7 +18,7 @@
         }
 
         body {
-            padding: 15px;
+            padding: 12px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -26,8 +26,8 @@
         }
 
         h1 {
-            font-size: 1.3rem;
-            margin: 0 0 10px 0;
+            font-size: 1.1rem;
+            margin: 0 0 8px 0;
             color: #ff4757;
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -38,7 +38,7 @@
             width: 100%;
             max-width: 100%;
             background-color: #2a2a35;
-            padding: 15px;
+            padding: 12px;
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
             box-sizing: border-box;
@@ -49,26 +49,32 @@
             min-height: 0;
         }
 
-        .form-group {
-            margin-bottom: 12px;
+        .top-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 8px;
             flex-shrink: 0;
+        }
+
+        .form-group {
+            flex: 1;
         }
 
         label {
             display: block;
-            font-size: 0.8rem;
-            margin-bottom: 4px;
+            font-size: 0.75rem;
+            margin-bottom: 3px;
             color: #a0a0b0;
         }
 
         select {
             width: 100%;
-            padding: 8px 10px;
+            padding: 6px 8px;
             background-color: #1e1e24;
             color: #ffffff;
             border: 2px solid #3e3e50;
             border-radius: 6px;
-            font-size: 0.95rem;
+            font-size: 0.85rem;
             cursor: pointer;
             box-sizing: border-box;
         }
@@ -78,56 +84,27 @@
             outline: none;
         }
 
-        /* 【追加】キャラクター別メモエリアの設定 */
-        .memo-group {
-            margin-bottom: 12px;
-            display: flex;
-            flex-direction: column;
-            flex: 0 0 80px;
-            /* 初期状態の縦幅を指定 */
-            min-height: 60px;
-        }
-
-        .memo-area {
-            width: 100%;
-            height: 100%;
-            padding: 8px 10px;
-            background-color: #1e1e24;
-            color: #ffffff;
-            border: 2px solid #3e3e50;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            box-sizing: border-box;
-            resize: none;
-            /* 右下のツマミを非表示にしてレイアウト崩れ防止 */
-            font-family: inherit;
-        }
-
-        .memo-area:focus {
-            border-color: #eccc68;
-            outline: none;
-        }
-
+        /* カウンター表示のコンパクト化 */
         .counter-display {
             display: flex;
             justify-content: space-around;
             background-color: #1e1e24;
-            padding: 12px;
+            padding: 8px;
             border-radius: 8px;
-            margin-bottom: 15px;
+            margin-bottom: 8px;
             text-align: center;
             flex-shrink: 0;
         }
 
         .counter-box h2 {
             margin: 0;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             color: #a0a0b0;
         }
 
         .counter-box p {
-            margin: 3px 0 0 0;
-            font-size: 1.6rem;
+            margin: 2px 0 0 0;
+            font-size: 1.3rem;
             font-weight: bold;
         }
 
@@ -143,66 +120,117 @@
             color: #eccc68;
         }
 
-        .btn-group {
+        /* メモエリアのコンパクト化 */
+        .memo-group {
+            margin-bottom: 8px;
             display: flex;
-            gap: 12px;
-            margin-bottom: 15px;
+            flex-direction: column;
             flex-shrink: 0;
         }
 
-        button {
-            flex: 1;
-            padding: 12px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: transform 0.1s;
+        .memo-area {
+            width: 100%;
+            height: 45px;
+            padding: 6px 8px;
+            background-color: #1e1e24;
+            color: #ffffff;
+            border: 2px solid #3e3e50;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            box-sizing: border-box;
+            resize: none;
+            font-family: inherit;
         }
 
-        button:active {
+        .memo-area:focus {
+            border-color: #eccc68;
+            outline: none;
+        }
+
+        /* 対戦相手キャラクター選択グリッドエリア */
+        .section-title {
+            font-size: 0.8rem;
+            color: #eccc68;
+            margin-bottom: 4px;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .char-grid {
+            flex: 2;
+            /* 画面中央で最も広いスペースを確保 */
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(75px, 1fr));
+            gap: 4px;
+            overflow-y: auto;
+            background-color: #1e1e24;
+            padding: 6px;
+            border-radius: 8px;
+            border: 2px solid #3e3e50;
+            min-height: 0;
+            /* スクロール崩れ防止 */
+            margin-bottom: 8px;
+        }
+
+        .char-btn {
+            background-color: #3e3e50;
+            color: #ffffff;
+            border: none;
+            border-radius: 4px;
+            padding: 6px 2px;
+            font-size: 0.72rem;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: background-color 0.1s, transform 0.05s;
+        }
+
+        .char-btn:active {
             transform: scale(0.95);
         }
 
-        .btn-win {
-            background-color: #2ed573;
-            color: #fff;
+        .char-btn.selected {
+            background-color: #ff4757;
+            /* 現在選択（直近で戦った）キャラを強調 */
+            box-shadow: 0 0 6px rgba(255, 71, 87, 0.5);
         }
 
-        .btn-lose {
-            background-color: #ff4757;
-            color: #fff;
+        /* 履歴エリア：コンパクト化して下部に配置 */
+        .history-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
         }
 
         .history-title {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             border-bottom: 2px solid #3e3e50;
-            padding-bottom: 3px;
-            margin-bottom: 8px;
+            padding-bottom: 2px;
+            margin-bottom: 4px;
             color: #ff4757;
             flex-shrink: 0;
         }
 
-        /* 履歴エリア：残りの縦幅を綺麗にシェアして伸縮 */
         .history-list {
-            flex: 1 1 auto;
+            flex: 1;
             overflow-y: auto;
-            padding-right: 5px;
             min-height: 0;
         }
 
         .history-item {
             background-color: #1e1e24;
-            padding: 8px 10px;
-            margin-bottom: 5px;
-            border-radius: 6px;
-            font-size: 0.8rem;
+            padding: 4px 8px;
+            margin-bottom: 3px;
+            border-radius: 4px;
+            font-size: 0.75rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-left: 4px solid #3e3e50;
-            flex-shrink: 0;
+            border-left: 3px solid #3e3e50;
         }
 
         .item-win {
@@ -215,47 +243,89 @@
 
         .char-info {
             display: flex;
-            flex-direction: column;
-            gap: 2px;
-        }
-
-        .char-text {
-            font-size: 0.75rem;
-            color: #a0a0b0;
+            align-items: center;
+            gap: 6px;
         }
 
         .time-text {
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             color: #707080;
         }
 
-        .result-text {
-            font-size: 1rem;
+        /* ポップアップ（カスタムダイアログ）のスタイル */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+        }
+
+        .modal-box {
+            background-color: #2a2a35;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            border: 2px solid #3e3e50;
+            width: 80%;
+            max-width: 260px;
+        }
+
+        .modal-title {
+            font-size: 0.95rem;
+            margin-bottom: 12px;
             font-weight: bold;
+        }
+
+        .modal-btn-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 10px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            color: #fff;
+        }
+
+        .m-win {
+            background-color: #2ed573;
+        }
+
+        .m-lose {
+            background-color: #ff4757;
+        }
+
+        .m-cancel {
+            background-color: #3e3e50;
+            color: #a0a0b0;
+            font-size: 0.75rem;
+            margin-top: 8px;
+            width: 100%;
         }
 
         .clear-btn {
             background-color: #3e3e50;
             color: #a0a0b0;
-            font-size: 0.75rem;
-            padding: 8px 12px;
-            border-radius: 6px;
-            margin-top: 15px;
+            font-size: 0.7rem;
+            padding: 4px;
+            border-radius: 4px;
+            margin-top: 4px;
             width: 100%;
             cursor: pointer;
             border: none;
-            flex: 0 0 auto;
-            height: 32px;
-            box-sizing: border-box;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background-color 0.1s;
-        }
-
-        .clear-btn:hover {
-            background-color: #4e4e65;
-            color: #ffffff;
+            flex-shrink: 0;
         }
     </style>
 </head>
@@ -265,20 +335,11 @@
     <h1>TEKKEN 8 COUNTER</h1>
 
     <div class="container">
-        <div class="form-group">
-            <label for="my-char-select">使用キャラクター（自分）</label>
-            <select id="my-char-select"></select>
-        </div>
-
-        <div class="form-group">
-            <label for="opp-char-select">対戦相手（相手）</label>
-            <select id="opp-char-select" onchange="loadCharacterMemo()"></select>
-        </div>
-
-        <div class="memo-group">
-            <label id="memo-label" for="char-memo">対戦相手のキャラクター専用メモ</label>
-            <textarea id="char-memo" class="memo-area" placeholder="確定反撃のメモや相手の癖などを記録..."
-                oninput="saveCharacterMemo()"></textarea>
+        <div class="top-row">
+            <div class="form-group">
+                <label for="my-char-select">使用キャラクター（自分）</label>
+                <select id="my-char-select"></select>
+            </div>
         </div>
 
         <div class="counter-display">
@@ -296,15 +357,31 @@
             </div>
         </div>
 
-        <div class="btn-group">
-            <button class="btn-win" onclick="recordMatch('WIN')">WIN</button>
-            <button class="btn-lose" onclick="recordMatch('LOSE')">LOSE</button>
+        <div class="memo-group">
+            <label id="memo-label" for="char-memo">対戦相手 [ 未選択 ] の専用メモ</label>
+            <textarea id="char-memo" class="memo-area" placeholder="ここに書いた内容はキャラクターごとに自動保存されます..."
+                oninput="saveCharacterMemo()"></textarea>
         </div>
 
-        <div class="history-title">直近の対戦履歴</div>
-        <div id="history-list" class="history-list"></div>
+        <div class="section-title">対戦相手を選択して結果を記録</div>
+        <div id="char-grid" class="char-grid"></div>
 
-        <button class="clear-btn" onclick="clearHistory()">データをすべてリセット</button>
+        <div class="history-section">
+            <div class="history-title">直近の対戦履歴</div>
+            <div id="history-list" class="history-list"></div>
+            <button class="clear-btn" onclick="clearHistory()">データをすべてリセット</button>
+        </div>
+    </div>
+
+    <div id="result-modal" class="modal-overlay">
+        <div class="modal-box">
+            <div id="modal-target-char" class="modal-title">キャラ名</div>
+            <div class="modal-btn-group">
+                <button class="modal-btn m-win" onclick="submitMatchResult('WIN')">WIN</button>
+                <button class="modal-btn m-lose" onclick="submitMatchResult('LOSE')">LOSE</button>
+            </div>
+            <button class="modal-btn m-cancel" onclick="closeModal()">キャンセル</button>
+        </div>
     </div>
 
     <script>
@@ -317,42 +394,92 @@
             "レオ", "ロジャーJr.", "ロウ"
         ];
 
-        function initDropdowns() {
+        let matchHistory = JSON.parse(localStorage.getItem('t8_counter_v4')) || [];
+        let characterMemos = JSON.parse(localStorage.getItem('t8_memos_v4')) || {};
+        let currentSelectedOpponent = localStorage.getItem('t8_current_opp_v4') || "一八";
+        let pendingOpponentCharacter = ""; // モダルで一時保持用
+
+        // 自分キャラのドロップダウン初期化
+        function initMyCharacterDropdown() {
             const mySelect = document.getElementById('my-char-select');
-            const oppSelect = document.getElementById('opp-char-select');
-
             mySelect.innerHTML = '';
-            oppSelect.innerHTML = '';
-
             characterList.forEach(char => {
-                const optMy = document.createElement('option');
-                optMy.value = char;
-                optMy.textContent = char;
-                mySelect.appendChild(optMy);
-
-                const optOpp = document.createElement('option');
-                optOpp.value = char;
-                optOpp.textContent = char;
-                oppSelect.appendChild(optOpp);
+                const opt = document.createElement('option');
+                opt.value = char;
+                opt.textContent = char;
+                mySelect.appendChild(opt);
             });
-
-            mySelect.value = "仁";
-            oppSelect.value = "一八";
+            mySelect.value = "仁"; // 初期値
         }
 
-        let matchHistory = JSON.parse(localStorage.getItem('t8_counter_v3')) || [];
-        // 【追加】キャラクターごとのメモを保持するオブジェクト
-        let characterMemos = JSON.parse(localStorage.getItem('t8_memos_v3')) || {};
+        // 対戦相手ボタン一覧（グリッド）の動的生成
+        function initOpponentGrid() {
+            const grid = document.getElementById('char-grid');
+            grid.innerHTML = '';
+
+            characterList.forEach(char => {
+                const btn = document.createElement('button');
+                btn.className = 'char-btn';
+                btn.id = `btn-${char}`;
+                btn.textContent = char;
+                // クリックしたら勝敗入力ポップアップを開く
+                btn.onclick = () => openResultModal(char);
+                grid.appendChild(btn);
+            });
+
+            highlightCurrentOpponent();
+        }
+
+        // 現在ターゲットにしている（直近で戦った）キャラのボタン色を変える
+        function highlightCurrentOpponent() {
+            characterList.forEach(char => {
+                const btn = document.getElementById(`btn-${char}`);
+                if (btn) btn.classList.remove('selected');
+            });
+            const activeBtn = document.getElementById(`btn-${currentSelectedOpponent}`);
+            if (activeBtn) activeBtn.classList.add('selected');
+        }
+
+        // キャラクターボタンを押した時にポップアップを表示
+        function openResultModal(char) {
+            pendingOpponentCharacter = char;
+            document.getElementById('modal-target-char').innerHTML = `対戦相手: <strong>${char}</strong><br>試合結果を選択`;
+            document.getElementById('result-modal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('result-modal').style.display = 'none';
+        }
+
+        // ポップアップでWIN/LOSEを押した時の最終処理
+        function submitMatchResult(result) {
+            const myChar = document.getElementById('my-char-select').value;
+            const oppChar = pendingOpponentCharacter;
+
+            const newMatch = {
+                myChar: myChar,
+                oppChar: oppChar,
+                result: result,
+                timestamp: new Date().getTime()
+            };
+
+            matchHistory.push(newMatch);
+            localStorage.setItem('t8_counter_v4', JSON.stringify(matchHistory));
+
+            // 選択したキャラを「現在のターゲット」としてロック
+            currentSelectedOpponent = oppChar;
+            localStorage.setItem('t8_current_opp_v4', currentSelectedOpponent);
+
+            highlightCurrentOpponent();
+            loadCharacterMemo();
+            updateDisplay();
+            closeModal();
+        }
 
         function formatTimestamp(ms) {
-            if (!ms) return "日時不明";
+            if (!ms) return "不明";
             const d = new Date(ms);
-            const year = d.getFullYear();
-            const month = String(d.getMonth() + 1).padStart(2, '0');
-            const date = String(d.getDate()).padStart(2, '0');
-            const hours = String(d.getHours()).padStart(2, '0');
-            const minutes = String(d.getMinutes()).padStart(2, '0');
-            return `${year}/${month}/${date} ${hours}:${minutes}`;
+            return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
         }
 
         function updateDisplay() {
@@ -362,27 +489,32 @@
             const listContainer = document.getElementById('history-list');
             listContainer.innerHTML = '';
 
+            // 直近5件のみ描画（コンパクト化のため）
+            const maxDisplay = 5;
+            let count = 0;
+
             for (let i = matchHistory.length - 1; i >= 0; i--) {
                 const match = matchHistory[i];
 
                 if (match.result === 'WIN') wins++;
                 if (match.result === 'LOSE') loses++;
 
-                const timeString = formatTimestamp(match.timestamp);
+                if (count < maxDisplay) {
+                    const timeString = formatTimestamp(match.timestamp);
+                    const item = document.createElement('div');
+                    const resultClass = match.result === 'WIN' ? 'item-win' : 'item-lose';
+                    item.className = `history-item ${resultClass}`;
 
-                const item = document.createElement('div');
-                const resultClass = match.result === 'WIN' ? 'item-win' : 'item-lose';
-                item.className = `history-item ${resultClass}`;
-
-                item.innerHTML = `
-          <div class="char-info">
-            <strong>${match.oppChar}</strong> <span class="char-text">(対戦相手)</span>
-            <span class="char-text">使用: ${match.myChar}</span>
-            <span class="time-text">${timeString}</span>
-          </div>
-          <span class="result-text"><strong>${match.result}</strong></span>
-        `;
-                listContainer.appendChild(item);
+                    item.innerHTML = `
+            <div class="char-info">
+              <strong>${match.oppChar}</strong>
+              <span class="time-text">(${timeString} / 自分: ${match.myChar})</span>
+            </div>
+            <span><strong>${match.result}</strong></span>
+          `;
+                    listContainer.appendChild(item);
+                    count++;
+                }
             }
 
             const total = wins + loses;
@@ -393,60 +525,39 @@
             document.getElementById('win-rate').innerText = `${rate}%`;
         }
 
-        function recordMatch(result) {
-            const myChar = document.getElementById('my-char-select').value;
-            const oppChar = document.getElementById('opp-char-select').value;
-
-            const newMatch = {
-                myChar: myChar,
-                oppChar: oppChar,
-                result: result,
-                timestamp: new Date().getTime()
-            };
-
-            matchHistory.push(newMatch);
-            localStorage.setItem('t8_counter_v3', JSON.stringify(matchHistory));
-            updateDisplay();
-        }
-
-        /* 【追加】現在選択されている相手キャラのメモを読み込む処理 */
         function loadCharacterMemo() {
-            const oppChar = document.getElementById('opp-char-select').value;
             const memoArea = document.getElementById('char-memo');
             const memoLabel = document.getElementById('memo-label');
 
-            // ラベルのテキストを「〇〇 専用メモ」と動的に変更
-            memoLabel.textContent = `対戦相手 [ ${oppChar} ] 専用の対策メモ`;
-
-            // 保存されたデータがあれば表示、なければ空にする
-            memoArea.value = characterMemos[oppChar] || "";
+            memoLabel.textContent = `対戦相手 [ ${currentSelectedOpponent} ] 専用の対策メモ`;
+            memoArea.value = characterMemos[currentSelectedOpponent] || "";
         }
 
-        /* 【追加】文字が入力されるたびにリアルタイムで保存する処理 */
         function saveCharacterMemo() {
-            const oppChar = document.getElementById('opp-char-select').value;
             const memoContent = document.getElementById('char-memo').value;
-
-            // キャラクター名をキーにして文字を保存
-            characterMemos[oppChar] = memoContent;
-            localStorage.setItem('t8_memos_v3', JSON.stringify(characterMemos));
+            characterMemos[currentSelectedOpponent] = memoContent;
+            localStorage.setItem('t8_memos_v4', JSON.stringify(characterMemos));
         }
 
         function clearHistory() {
             if (confirm('すべての戦績データおよびキャラクターメモを削除します。よろしいですか？')) {
                 matchHistory = [];
-                characterMemos = {}; // メモもクリア
-                localStorage.removeItem('t8_counter_v3');
-                localStorage.removeItem('t8_memos_v3');
+                characterMemos = {};
+                currentSelectedOpponent = "一八";
+                localStorage.removeItem('t8_counter_v4');
+                localStorage.removeItem('t8_memos_v4');
+                localStorage.removeItem('t8_current_opp_v4');
                 updateDisplay();
+                highlightCurrentOpponent();
                 loadCharacterMemo();
             }
         }
 
-        // 初期化処理
-        initDropdowns();
+        // 起動時初期化
+        initMyCharacterDropdown();
+        initOpponentGrid();
         updateDisplay();
-        loadCharacterMemo(); // 【追加】起動時に初期キャラ（一八）のメモを読み込む
+        loadCharacterMemo();
     </script>
 </body>
 
