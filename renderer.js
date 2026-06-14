@@ -200,6 +200,42 @@ function executeReset() {
     });
 })();
 
+// --- キャラクターグリッドのドラッグスクロール実装 ---
+(function () {
+    const grid = document.getElementById('char-grid');
+    let isDown = false;
+    let startY;
+    let scrollTop;
+    const EDGE_SIZE = 16; // 下端リサイズ領域のサイズ（既存のコードと同期）
+
+    grid.addEventListener('mousedown', function (e) {
+        const rect = grid.getBoundingClientRect();
+        // 【重要】もしマウス位置が下端リサイズ領域内なら、スクロール処理は無視する
+        if (e.clientY >= rect.bottom - EDGE_SIZE) return;
+
+        isDown = true;
+        // クリックされた位置のY座標と、その時の初期スクロール位置を記憶
+        startY = e.pageY - grid.offsetTop;
+        scrollTop = grid.scrollTop;
+    });
+
+    // マウスがグリッド外に出た、または離されたらドラッグ終了
+    grid.addEventListener('mouseleave', function () { isDown = false; });
+    grid.addEventListener('mouseup', function () { isDown = false; });
+
+    grid.addEventListener('mousemove', function (e) {
+        if (!isDown) return; // マウスが押されていなければ何もしない
+
+        e.preventDefault(); // 予期せぬスクロールバグを防ぐ
+        const y = e.pageY - grid.offsetTop;
+        // 移動量を計算（末尾の数値を大きくするとスクロールが速くなります）
+        const walk = (y - startY) * 1.2;
+
+        // 計算した位置へスクロールを上書き更新
+        grid.scrollTop = scrollTop - walk;
+    });
+})();
+
 // 起動時初期化
 initMyCharacterDropdown();
 initOpponentGrid();

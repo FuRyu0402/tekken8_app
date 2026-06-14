@@ -177,6 +177,26 @@
             min-height: 0;
             overflow-y: auto;
             align-content: start;
+
+            /* --- ここから追加：ドラッグしやすくするためのカーソル設定と文字選択の禁止 --- */
+            cursor: grab;
+            user-select: none;
+
+            /* --- ここから追加：スクロールバー非表示設定 --- */
+            -ms-overflow-style: none;
+            /* IE, Edge用 */
+            scrollbar-width: none;
+            /* Firefox用 */
+        }
+
+        /* Google Chrome, Safari, Electron用 */
+        .char-grid::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* 掴んでいる最中のカーソル形状変更 */
+        .char-grid:active {
+            cursor: grabbing;
         }
 
         /* スマホは4列 */
