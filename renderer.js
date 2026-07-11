@@ -9,6 +9,7 @@ const addWinButton = document.getElementById('add-win');
 const addLoseButton = document.getElementById('add-lose');
 const undoButton = document.getElementById('undo');
 const clearButton = document.getElementById('clear');
+const backupBeforeClearToggle = document.getElementById('backup-before-clear');
 
 let resultBusy = false;
 let monitorLoading = false;
@@ -61,6 +62,7 @@ function applyControls() {
   addLoseButton.disabled = resultBusy || stopping;
   undoButton.disabled = resultBusy || running || stopping;
   clearButton.disabled = resultBusy || running || stopping;
+  backupBeforeClearToggle.disabled = resultBusy;
 }
 
 function renderAutoState(state) {
@@ -207,6 +209,29 @@ addWinButton.addEventListener('click', () => performResult(window.matchResults.a
 addLoseButton.addEventListener('click', () => performResult(window.matchResults.addLose, 'LOSEを追加しました。'));
 undoButton.addEventListener('click', () => performResult(window.matchResults.undo, '直前の記録を取り消しました。'));
 clearButton.addEventListener('click', () => performResult(window.matchResults.clear, '全記録を消去しました。'));
+backupBeforeClearToggle.addEventListener('change', async () => {
+  backupBeforeClearToggle.disabled = true;
+  try {
+    const settings = await window.matchResults.setBackupBeforeClear(backupBeforeClearToggle.checked);
+    backupBeforeClearToggle.checked = settings.backupBeforeClear;
+    setResultStatus('設定を保存しました。');
+  } catch (error) {
+    backupBeforeClearToggle.checked = !backupBeforeClearToggle.checked;
+    setResultStatus(error.message || String(error), true);
+  } finally {
+    applyControls();
+  }
+});
+
+async function loadAppSettings() {
+  try {
+    const settings = await window.matchResults.getAppSettings();
+    backupBeforeClearToggle.checked = settings.backupBeforeClear;
+  } catch (error) {
+    backupBeforeClearToggle.checked = true;
+    setResultStatus(error.message || String(error), true);
+  }
+}
 
 const removeStatusListener = window.matchResults.onAutoTrackerStatus(renderAutoState);
 window.addEventListener('beforeunload', () => {
@@ -218,4 +243,5 @@ Promise.allSettled([
   window.matchResults.getAutoTrackerStatus().then(renderAutoState),
   loadMonitors(),
   performResult(window.matchResults.getStats, '戦績を読み込みました。'),
+  loadAppSettings(),
 ]);

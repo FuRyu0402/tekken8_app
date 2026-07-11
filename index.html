@@ -12,6 +12,10 @@
     h1 { margin: 0 0 14px; color: #ff4757; font-size: 1.2rem; text-align: center; letter-spacing: .08em; }
     .panel { background: #2a2a35; border-radius: 12px; padding: 15px; box-shadow: 0 4px 15px rgba(0,0,0,.3); }
     .auto-panel { background: #1e1e24; border: 1px solid #3e3e50; border-radius: 8px; margin-bottom: 13px; padding: 11px; }
+    .settings-panel { margin-top: 13px; }
+    .settings-toggle { align-items: center; cursor: pointer; display: flex; font-size: .8rem; gap: 9px; line-height: 1.45; }
+    .settings-toggle input { accent-color: #3867d6; flex: 0 0 auto; height: 18px; width: 18px; }
+    .settings-note { color: #90909f; font-size: .7rem; margin: 6px 0 0 27px; }
     .auto-title, .history-title { color: #eccc68; font-size: .84rem; font-weight: 700; margin-bottom: 7px; }
     .monitor-row { display: grid; grid-template-columns: 1fr auto; gap: 7px; }
     select { min-width: 0; background: #2a2a35; border: 1px solid #555568; border-radius: 6px; color: #fff; padding: 8px; }
@@ -72,6 +76,14 @@
       <div id="status" class="status" role="status" aria-live="polite">起動しています…</div>
       <div class="history-title">直近10件の履歴</div>
       <div id="history-list" class="history-list"></div>
+      <section class="auto-panel settings-panel" aria-labelledby="settings-title">
+        <div id="settings-title" class="auto-title">設定</div>
+        <label class="settings-toggle">
+          <input id="backup-before-clear" type="checkbox" checked>
+          <span>全記録消去時にバックアップCSVを作成する</span>
+        </label>
+        <p class="settings-note">OFFの場合、消去した記録は元に戻せません。</p>
+      </section>
     </section>
   </main>
   <script src="stats_polling.js"></script>

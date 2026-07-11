@@ -114,10 +114,18 @@ test('preload exposes only fixed APIs and status listener returns cleanup', () =
     'getStats', 'addWin', 'addLose', 'undo', 'clear', 'listMonitors',
     'startAutoTracker', 'stopAutoTracker', 'getAutoTrackerStatus', 'onAutoTrackerStatus',
     'restoreMonitorSelection', 'saveMonitorSelection',
+    'getAppSettings', 'setBackupBeforeClear',
   ];
   for (const name of expected) assert.match(source, new RegExp(`\\b${name}\\b`));
   assert.doesNotMatch(source, /invoke\([^'\"]|send\([^'\"]/);
   assert.match(source, /return \(\) => ipcRenderer\.removeListener/);
+});
+
+test('clear uses current backup setting and warns when backup is disabled', () => {
+  const source = fs.readFileSync(path.join(__dirname, 'main.js'), 'utf8');
+  assert.match(source, /loadAppSettings\(app\.getPath\('userData'\)\)/);
+  assert.match(source, /options\.backupBeforeClear === false \? '--no-backup' : '--backup'/);
+  assert.match(source, /バックアップなしで削除され、元に戻せません/);
 });
 
 test('renderer policy disables undo and clear while running but keeps WIN and LOSE available', () => {
