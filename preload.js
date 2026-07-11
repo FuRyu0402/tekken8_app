@@ -6,6 +6,8 @@ contextBridge.exposeInMainWorld('matchResults', {
   addLose: () => ipcRenderer.invoke('results:add-lose'),
   undo: () => ipcRenderer.invoke('results:undo'),
   clear: () => ipcRenderer.invoke('results:clear'),
+  getAppSettings: () => ipcRenderer.invoke('app-settings:get'),
+  setBackupBeforeClear: (enabled) => ipcRenderer.invoke('app-settings:set-backup-before-clear', enabled),
   listMonitors: () => ipcRenderer.invoke('auto-tracker:list-monitors'),
   restoreMonitorSelection: () => ipcRenderer.invoke('monitor-settings:restore'),
   saveMonitorSelection: (monitorIndex) => ipcRenderer.invoke('monitor-settings:save', monitorIndex),

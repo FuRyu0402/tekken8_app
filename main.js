@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const { AutoTrackerManager, createQuitCoordinator, validateMonitorIndex } = require('./auto_tracker_manager');
 const { findSavedMonitor, loadMonitorSettings, saveMonitorSettings } = require('./monitor_settings');
+const { loadAppSettings, updateAppSetting } = require('./app_settings');
 
 const ALLOWED_COMMANDS = new Set(['get-stats', 'add-win', 'add-lose', 'undo', 'clear']);
 const MAX_JSON_OUTPUT_BYTES = 1024 * 1024;
@@ -66,16 +67,17 @@ function runJsonPython(scriptPath, args = []) {
   });
 }
 
-function resultArguments(command) {
+function resultArguments(command, options = {}) {
   const args = [command];
+  if (command === 'clear') args.push(options.backupBeforeClear === false ? '--no-backup' : '--backup');
   if (process.env.TEKKEN8_LOG_PATH) args.push('--log-path', process.env.TEKKEN8_LOG_PATH);
   if (process.env.TEKKEN8_ARCHIVE_DIR) args.push('--archive-dir', process.env.TEKKEN8_ARCHIVE_DIR);
   return args;
 }
 
-function runResultCommand(command) {
+function runResultCommand(command, options) {
   if (!ALLOWED_COMMANDS.has(command)) return Promise.reject(new Error(`許可されていない操作です: ${command}`));
-  return runJsonPython(resolveTrackerPaths().resultCliPath, resultArguments(command));
+  return runJsonPython(resolveTrackerPaths().resultCliPath, resultArguments(command, options));
 }
 
 function listMonitors() {
@@ -115,15 +117,23 @@ function registerIpcHandlers() {
   ipcMain.handle('results:add-lose', () => runResultCommand('add-lose'));
   ipcMain.handle('results:undo', () => runResultCommand('undo'));
   ipcMain.handle('results:clear', async (event) => {
+    const settings = await loadAppSettings(app.getPath('userData'));
     const owner = BrowserWindow.fromWebContents(event.sender);
     const choice = await dialog.showMessageBox(owner, {
       type: 'warning', buttons: ['キャンセル', '全記録を消去'], defaultId: 0, cancelId: 0,
       title: '全記録の消去', message: 'すべての戦績を消去しますか？',
-      detail: '消去前にPython側でバックアップが作成されます。', noLink: true,
+      detail: settings.backupBeforeClear
+        ? '消去前にバックアップCSVが作成されます。'
+        : 'バックアップなしで削除され、元に戻せません。',
+      noLink: true,
     });
     if (choice.response !== 1) return { canceled: true };
-    return { canceled: false, result: await runResultCommand('clear') };
+    return { canceled: false, result: await runResultCommand('clear', settings) };
   });
+  ipcMain.handle('app-settings:get', () => loadAppSettings(app.getPath('userData')));
+  ipcMain.handle('app-settings:set-backup-before-clear', (_event, enabled) => (
+    updateAppSetting(app.getPath('userData'), 'backupBeforeClear', enabled)
+  ));
   ipcMain.handle('auto-tracker:list-monitors', () => listMonitors());
   ipcMain.handle('monitor-settings:restore', async () => {
     if (availableMonitors.length === 0) await listMonitors();
