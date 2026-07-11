@@ -7,6 +7,8 @@ contextBridge.exposeInMainWorld('matchResults', {
   undo: () => ipcRenderer.invoke('results:undo'),
   clear: () => ipcRenderer.invoke('results:clear'),
   listMonitors: () => ipcRenderer.invoke('auto-tracker:list-monitors'),
+  restoreMonitorSelection: () => ipcRenderer.invoke('monitor-settings:restore'),
+  saveMonitorSelection: (monitorIndex) => ipcRenderer.invoke('monitor-settings:save', monitorIndex),
   startAutoTracker: (monitorIndex) => ipcRenderer.invoke('auto-tracker:start', monitorIndex),
   stopAutoTracker: () => ipcRenderer.invoke('auto-tracker:stop'),
   getAutoTrackerStatus: () => ipcRenderer.invoke('auto-tracker:get-status'),

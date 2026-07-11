@@ -113,6 +113,7 @@ test('preload exposes only fixed APIs and status listener returns cleanup', () =
   const expected = [
     'getStats', 'addWin', 'addLose', 'undo', 'clear', 'listMonitors',
     'startAutoTracker', 'stopAutoTracker', 'getAutoTrackerStatus', 'onAutoTrackerStatus',
+    'restoreMonitorSelection', 'saveMonitorSelection',
   ];
   for (const name of expected) assert.match(source, new RegExp(`\\b${name}\\b`));
   assert.doesNotMatch(source, /invoke\([^'\"]|send\([^'\"]/);

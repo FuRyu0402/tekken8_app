@@ -15,6 +15,7 @@ let monitorLoading = false;
 let autoUiError = null;
 let autoState = { status: 'stopped', monitorIndex: null, lastError: null, userStopped: false };
 let pollingErrorVisible = false;
+let shouldRestoreMonitor = true;
 
 const STATUS_LABELS = {
   stopped: '停止中',
@@ -87,20 +88,26 @@ async function loadMonitors() {
   try {
     const monitors = await window.matchResults.listMonitors();
     monitorSelect.replaceChildren();
+    const unselectedOption = document.createElement('option');
+    unselectedOption.value = '';
+    unselectedOption.textContent = monitors.length === 0 ? '利用可能な個別モニターがありません' : 'モニターを選択してください';
+    monitorSelect.appendChild(unselectedOption);
     for (const monitor of monitors) {
       const option = document.createElement('option');
       option.value = String(monitor.index);
       option.textContent = formatMonitor(monitor);
       monitorSelect.appendChild(option);
     }
-    if (monitors.length === 0) {
-      const option = document.createElement('option');
-      option.value = '';
-      option.textContent = '利用可能な個別モニターがありません';
-      monitorSelect.appendChild(option);
-    } else if ([...monitorSelect.options].some((option) => option.value === previous)) {
+    if (previous && [...monitorSelect.options].some((option) => option.value === previous)) {
       monitorSelect.value = previous;
+    } else if (shouldRestoreMonitor && monitors.length > 0) {
+      const restoredIndex = await window.matchResults.restoreMonitorSelection();
+      const restoredValue = restoredIndex === null ? '' : String(restoredIndex);
+      monitorSelect.value = [...monitorSelect.options].some((option) => option.value === restoredValue)
+        ? restoredValue
+        : '';
     }
+    if (monitors.length > 0) shouldRestoreMonitor = false;
   } catch (error) {
     monitorSelect.replaceChildren();
     const option = document.createElement('option');
@@ -168,7 +175,18 @@ async function performResult(action, successMessage) {
 }
 
 refreshMonitorsButton.addEventListener('click', loadMonitors);
-monitorSelect.addEventListener('change', applyControls);
+monitorSelect.addEventListener('change', async () => {
+  applyControls();
+  if (monitorSelect.value === '') return;
+  try {
+    await window.matchResults.saveMonitorSelection(Number(monitorSelect.value));
+    autoUiError = null;
+    renderAutoState(autoState);
+  } catch (error) {
+    autoUiError = error.message || String(error);
+    renderAutoState(autoState);
+  }
+});
 startButton.addEventListener('click', async () => {
   try {
     autoUiError = null;
