@@ -1,499 +1,57 @@
 <!DOCTYPE html>
 <html lang="ja">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>鉄拳8 戦績カウンター</title>
-    <style>
-        *,
-        *::before,
-        *::after {
-            box-sizing: border-box;
-        }
-
-        html,
-        body {
-            height: 100%;
-            margin: 0;
-            padding: 0;
-            background-color: #1e1e24;
-            font-family: 'Segoe UI', Meiryo, sans-serif;
-            color: #f5f5f7;
-            overflow: hidden;
-        }
-
-        body {
-            padding: 12px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        h1 {
-            font-size: 1.1rem;
-            margin: 0 0 8px 0;
-            color: #ff4757;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            flex-shrink: 0;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 600px;
-            background-color: #2a2a35;
-            padding: 12px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            /* ウィンドウの高さに追従して伸縮 */
-            flex: 1;
-            min-height: 0;
-            overflow: hidden;
-        }
-
-        /* 自分キャラ選択 */
-        .top-row {
-            display: flex;
-            gap: 10px;
-        }
-
-        .form-group {
-            flex: 1;
-        }
-
-        label {
-            display: block;
-            font-size: 0.75rem;
-            margin-bottom: 3px;
-            color: #a0a0b0;
-        }
-
-        select {
-            width: 100%;
-            padding: 6px 8px;
-            background-color: #1e1e24;
-            color: #ffffff;
-            border: 2px solid #3e3e50;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            cursor: pointer;
-        }
-
-        select:focus {
-            border-color: #ff4757;
-            outline: none;
-        }
-
-        /* WIN/LOSE/WIN RATE */
-        .counter-display {
-            display: flex;
-            justify-content: space-around;
-            background-color: #1e1e24;
-            padding: 10px 8px;
-            border-radius: 8px;
-            text-align: center;
-        }
-
-        .counter-box h2 {
-            margin: 0;
-            font-size: 0.7rem;
-            color: #a0a0b0;
-            letter-spacing: 1px;
-        }
-
-        .counter-box p {
-            margin: 4px 0 0 0;
-            font-size: 2rem;
-            font-weight: bold;
-            line-height: 1;
-        }
-
-        .win-color {
-            color: #2ed573;
-        }
-
-        .lose-color {
-            color: #ff4757;
-        }
-
-        .rate-color {
-            color: #eccc68;
-        }
-
-        /* メモ欄 */
-        .memo-group {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .memo-label {
-            display: block;
-            font-size: 0.75rem;
-            margin-bottom: 3px;
-            color: #eccc68;
-            font-weight: bold;
-        }
-
-        .memo-area {
-            width: 100%;
-            height: 90px;
-            padding: 6px 8px;
-            background-color: #1e1e24;
-            color: #ffffff;
-            border: 2px solid #eccc68;
-            border-radius: 6px;
-            font-size: 0.8rem;
-            resize: none;
-            font-family: inherit;
-        }
-
-        .memo-area:focus {
-            border-color: #f9ca24;
-            outline: none;
-        }
-
-        /* キャラグリッド */
-        .section-title {
-            font-size: 0.8rem;
-            color: #eccc68;
-            font-weight: bold;
-            margin-bottom: 2px;
-        }
-
-        .char-grid {
-            display: grid;
-            grid-template-columns: repeat(6, 1fr);
-            gap: 4px;
-            background-color: #1e1e24;
-            padding: 6px;
-            border-radius: 8px;
-            border: 2px solid #3e3e50;
-            /* 残りスペースを埋めて伸縮 */
-            flex: 1;
-            min-height: 0;
-            overflow-y: auto;
-            align-content: start;
-
-            /* --- ここから追加：ドラッグしやすくするためのカーソル設定と文字選択の禁止 --- */
-            cursor: grab;
-            user-select: none;
-
-            /* --- ここから追加：スクロールバー非表示設定 --- */
-            -ms-overflow-style: none;
-            /* IE, Edge用 */
-            scrollbar-width: none;
-            /* Firefox用 */
-        }
-
-        /* Google Chrome, Safari, Electron用 */
-        .char-grid::-webkit-scrollbar {
-            display: none;
-        }
-
-        /* 掴んでいる最中のカーソル形状変更 */
-        .char-grid:active {
-            cursor: grabbing;
-        }
-
-        /* スマホは4列 */
-        @media (max-width: 480px) {
-            .char-grid {
-                grid-template-columns: repeat(4, 1fr);
-            }
-        }
-
-        .char-btn {
-            background-color: #3e3e50;
-            color: #ffffff;
-            border: none;
-            border-radius: 4px;
-            height: 36px;
-            font-size: 0.72rem;
-            font-weight: bold;
-            cursor: pointer;
-            text-align: center;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            padding: 0 2px;
-            transition: background-color 0.1s, transform 0.05s;
-        }
-
-        .char-btn:active {
-            transform: scale(0.95);
-        }
-
-        .char-btn.selected {
-            background-color: #ff4757;
-            box-shadow: 0 0 6px rgba(255, 71, 87, 0.5);
-        }
-
-        .char-btn.long-name {
-            font-size: 0.60rem !important;
-            letter-spacing: -0.5px;
-        }
-
-        /* 対戦履歴 */
-        .history-section {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            flex: 1;
-            min-height: 0;
-        }
-
-        .history-title {
-            font-size: 0.8rem;
-            border-bottom: 2px solid #3e3e50;
-            padding-bottom: 2px;
-            color: #ff4757;
-        }
-
-        .history-list {
-            display: flex;
-            flex-direction: column;
-            gap: 3px;
-            overflow-y: auto;
-            flex: 1;
-            min-height: 0;
-        }
-
-        .history-item {
-            background-color: #1e1e24;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-left: 3px solid #3e3e50;
-        }
-
-        .item-win {
-            border-left-color: #2ed573;
-        }
-
-        .item-lose {
-            border-left-color: #ff4757;
-        }
-
-        .char-info {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .time-text {
-            font-size: 0.65rem;
-            color: #707080;
-        }
-
-        /* リセットボタン */
-        .clear-btn {
-            background-color: #2a2a35;
-            color: #606070;
-            font-size: 0.7rem;
-            padding: 5px;
-            border-radius: 4px;
-            width: 100%;
-            cursor: pointer;
-            border: 1px dashed #4e4e60;
-            transition: color 0.2s, border-color 0.2s;
-        }
-
-        .clear-btn:hover {
-            color: #ff4757;
-            border-color: #ff4757;
-        }
-
-        /* モーダル共通 */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.6);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 999;
-        }
-
-        .modal-box {
-            background-color: #2a2a35;
-            padding: 15px;
-            border-radius: 10px;
-            text-align: center;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-            border: 2px solid #3e3e50;
-            width: 80%;
-            max-width: 280px;
-        }
-
-        .modal-title {
-            font-size: 0.95rem;
-            margin-bottom: 12px;
-            font-weight: bold;
-        }
-
-        .modal-btn-group {
-            display: flex;
-            gap: 10px;
-        }
-
-        .modal-btn {
-            flex: 1;
-            padding: 10px;
-            font-size: 0.9rem;
-            font-weight: bold;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            color: #fff;
-        }
-
-        .m-confirm {
-            background-color: #ff4757;
-        }
-
-        .m-cancel-reset {
-            background-color: #3e3e50;
-            color: #a0a0b0;
-        }
-
-        /* 記録バー */
-        .record-bar {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background-color: #1e1e24;
-            border-radius: 8px;
-            padding: 8px 10px;
-        }
-
-        .record-bar-label {
-            font-size: 0.75rem;
-            color: #a0a0b0;
-            white-space: nowrap;
-        }
-
-        .record-bar-char {
-            font-size: 0.9rem;
-            font-weight: bold;
-            color: #ff4757;
-            flex: 1;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .record-btn {
-            padding: 6px 14px;
-            font-size: 0.85rem;
-            font-weight: bold;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            color: #fff;
-            white-space: nowrap;
-        }
-
-        .record-btn-win {
-            background-color: #2ed573;
-        }
-
-        .record-btn-lose {
-            background-color: #ff4757;
-        }
-
-        .record-btn-undo {
-            background-color: #3e3e50;
-            color: #a0a0b0;
-            border: 1px solid #5e5e70;
-        }
-
-        .record-btn-undo:hover {
-            background-color: #4e4e62;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>鉄拳8 戦績カウンター</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { min-height: 100%; margin: 0; }
+    body { background: #1e1e24; color: #f5f5f7; font-family: "Segoe UI", Meiryo, sans-serif; padding: 18px; }
+    main { width: 100%; max-width: 560px; margin: 0 auto; }
+    h1 { margin: 0 0 16px; color: #ff4757; font-size: 1.25rem; text-align: center; letter-spacing: .08em; }
+    .panel { background: #2a2a35; border-radius: 12px; padding: 16px; box-shadow: 0 4px 15px rgba(0,0,0,.3); }
+    .counter-display { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; background: #1e1e24; padding: 12px 8px; border-radius: 8px; text-align: center; }
+    .counter-box h2 { color: #a0a0b0; font-size: .7rem; margin: 0; }
+    .counter-box p { font-size: 1.7rem; font-weight: 700; margin: 5px 0 0; }
+    .total-color { color: #70a1ff; } .win-color { color: #2ed573; } .lose-color { color: #ff4757; } .rate-color { color: #eccc68; }
+    .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 14px; }
+    button { border: 0; border-radius: 7px; color: #fff; cursor: pointer; font-weight: 700; padding: 11px 8px; }
+    button:disabled { cursor: wait; opacity: .55; }
+    #add-win { background: #2ed573; } #add-lose { background: #ff4757; }
+    #undo { background: #4e4e62; } #clear { background: #732f3a; }
+    .status { min-height: 2.6em; margin: 12px 0; padding: 9px; border-radius: 6px; background: #1e1e24; color: #a8c7fa; font-size: .8rem; }
+    .status-error { color: #ff8d98; }
+    .history-title { border-bottom: 2px solid #3e3e50; color: #eccc68; font-size: .85rem; padding-bottom: 5px; }
+    .history-list { display: flex; flex-direction: column; gap: 5px; margin-top: 8px; }
+    .history-item { align-items: center; background: #1e1e24; border-left: 4px solid #3e3e50; border-radius: 5px; display: flex; justify-content: space-between; padding: 8px 10px; }
+    .item-win { border-left-color: #2ed573; } .item-lose { border-left-color: #ff4757; }
+    .time-text, .history-empty { color: #90909f; font-size: .75rem; }
+    .history-empty { padding: 12px 4px; text-align: center; }
+    @media (max-width: 460px) { .counter-display { grid-template-columns: 1fr 1fr; } }
+  </style>
 </head>
-
 <body>
-
-    <h1>TEKKEN 8 COUNTER</h1>
-
-    <div class="container">
-
-        <!-- 自分キャラ選択 -->
-        <div class="top-row">
-            <div class="form-group">
-                <label for="my-char-select">使用キャラクター（自分）</label>
-                <select id="my-char-select"></select>
-            </div>
-        </div>
-
-        <!-- WIN/LOSE/WIN RATE -->
-        <div class="counter-display">
-            <div class="counter-box">
-                <h2>WIN</h2>
-                <p id="total-wins" class="win-color">0</p>
-            </div>
-            <div class="counter-box">
-                <h2>LOSE</h2>
-                <p id="total-loses" class="lose-color">0</p>
-            </div>
-            <div class="counter-box">
-                <h2>WIN RATE</h2>
-                <p id="win-rate" class="rate-color">0%</p>
-            </div>
-        </div>
-
-        <!-- メモ欄 -->
-        <div class="memo-group">
-            <label id="memo-label" class="memo-label" for="char-memo">対戦相手 [ 未選択 ] の対策メモ</label>
-            <textarea id="char-memo" class="memo-area" placeholder="キャラクターを選択するとメモが表示されます..."></textarea>
-        </div>
-
-        <!-- キャラグリッド -->
-        <div class="section-title">対戦相手を選択</div>
-        <div id="char-grid" class="char-grid"></div>
-
-        <!-- 記録バー -->
-        <div class="record-bar">
-            <span class="record-bar-label">対戦相手:</span>
-            <span id="record-bar-char" class="record-bar-char">未選択</span>
-            <button class="record-btn record-btn-win" onclick="recordResult('WIN')">WIN</button>
-            <button class="record-btn record-btn-lose" onclick="recordResult('LOSE')">LOSE</button>
-            <button class="record-btn record-btn-undo" onclick="undoLastResult()">1件戻す</button>
-        </div>
-
-        <!-- 対戦履歴 -->
-        <div class="history-section">
-            <div class="history-title">直近の対戦履歴</div>
-            <div id="history-list" class="history-list"></div>
-            <button class="clear-btn" onclick="clearHistory()">データをすべてリセット</button>
-        </div>
-
-    </div>
-
-    <!-- リセット確認モーダル -->
-    <div id="reset-modal" class="modal-overlay">
-        <div class="modal-box">
-            <div class="modal-title">⚠️ データをリセット</div>
-            <p style="font-size:0.8rem; color:#a0a0b0; margin: 0 0 12px 0;">すべての戦績を削除します。<br>対策メモと選択状態は維持されます。</p>
-            <div class="modal-btn-group">
-                <button class="modal-btn m-cancel-reset" onclick="closeResetModal()">キャンセル</button>
-                <button class="modal-btn m-confirm" onclick="executeReset()">リセット</button>
-            </div>
-        </div>
-    </div>
-
-    <script src="renderer.js"></script>
+  <main>
+    <h1>TEKKEN 8 MATCH RESULTS</h1>
+    <section class="panel">
+      <div class="counter-display">
+        <div class="counter-box"><h2>総試合数</h2><p id="total-matches" class="total-color">0</p></div>
+        <div class="counter-box"><h2>WIN</h2><p id="total-wins" class="win-color">0</p></div>
+        <div class="counter-box"><h2>LOSE</h2><p id="total-loses" class="lose-color">0</p></div>
+        <div class="counter-box"><h2>勝率</h2><p id="win-rate" class="rate-color">0.0%</p></div>
+      </div>
+      <div class="actions">
+        <button id="add-win" data-action>WIN追加</button>
+        <button id="add-lose" data-action>LOSE追加</button>
+        <button id="undo" data-action>直前の1件を取り消す</button>
+        <button id="clear" data-action>全記録を消去する</button>
+      </div>
+      <div id="status" class="status" role="status" aria-live="polite">起動しています…</div>
+      <div class="history-title">直近10件の履歴</div>
+      <div id="history-list" class="history-list"></div>
+    </section>
+  </main>
+  <script src="renderer.js"></script>
 </body>
-
 </html>

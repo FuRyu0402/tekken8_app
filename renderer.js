@@ -1,244 +1,85 @@
-const characterList = [
-    "アーマーキング", "アズセナ", "飛鳥", "アリサ", "アンナ", "一八", "ヴィクター", "エディ",
-    "キング", "クマ", "クラウディオ", "クライヴ", "州光", "ザフィーナ", "ジャック8", "シャオユウ",
-    "シャヒーン", "準", "仁", "スティーブ", "デビル仁", "ドラグノフ", "ニーナ", "範馬 勇次郎",
-    "パンダ", "平八", "ファラン", "ファーカムラム", "フェン", "ブライアン", "ボブ", "ポール",
-    "ミアリズ", "吉光", "ラース", "リディア", "リリ", "リロイ", "リー", "レイヴン", "麗奈",
-    "レオ", "ロジャーJr.", "ロウ"
-];
+const buttons = Array.from(document.querySelectorAll('button[data-action]'));
+const statusElement = document.getElementById('status');
+let busy = false;
 
-let matchHistory = JSON.parse(localStorage.getItem('t8_counter_v4')) || [];
-let characterMemos = JSON.parse(localStorage.getItem('t8_memos_v4')) || {};
-let currentSelectedOpponent = localStorage.getItem('t8_current_opp_v4') || "一八";
-
-// メモエリアのイベントリスナーを1回だけ登録
-document.getElementById('char-memo').addEventListener('input', saveCharacterMemo);
-
-// 自分キャラのドロップダウン初期化
-function initMyCharacterDropdown() {
-    const mySelect = document.getElementById('my-char-select');
-    mySelect.innerHTML = '';
-    characterList.forEach(char => {
-        const opt = document.createElement('option');
-        opt.value = char;
-        opt.textContent = char;
-        mySelect.appendChild(opt);
-    });
-    mySelect.value = "仁";
+function setBusy(value) {
+  busy = value;
+  buttons.forEach((button) => { button.disabled = value; });
+  document.body.classList.toggle('is-busy', value);
 }
 
-// 対戦相手グリッドの生成
-function initOpponentGrid() {
-    const grid = document.getElementById('char-grid');
-    grid.innerHTML = '';
-    characterList.forEach(char => {
-        const btn = document.createElement('button');
-        btn.className = 'char-btn';
-        if (char.length >= 6) btn.classList.add('long-name');
-        btn.id = 'btn-' + char;
-        btn.textContent = char;
-        btn.onclick = function () { selectOpponent(char); };
-        grid.appendChild(btn);
-    });
-    highlightCurrentOpponent();
+function setStatus(message, isError = false) {
+  statusElement.textContent = message;
+  statusElement.classList.toggle('status-error', isError);
 }
 
-// 現在選択中のキャラを強調
-function highlightCurrentOpponent() {
-    characterList.forEach(char => {
-        const btn = document.getElementById('btn-' + char);
-        if (btn) btn.classList.remove('selected');
-    });
-    const activeBtn = document.getElementById('btn-' + currentSelectedOpponent);
-    if (activeBtn) activeBtn.classList.add('selected');
+function formatTimestamp(value) {
+  if (!value) return '日時なし';
+  return value;
 }
 
-// キャラボタンを押したらメモ欄と記録バーを更新するだけ
-function selectOpponent(char) {
-    currentSelectedOpponent = char;
-    localStorage.setItem('t8_current_opp_v4', currentSelectedOpponent);
-    highlightCurrentOpponent();
-    loadCharacterMemo();
-    document.getElementById('record-bar-char').textContent = char;
+function renderStats(stats) {
+  document.getElementById('total-matches').textContent = stats.total_matches;
+  document.getElementById('total-wins').textContent = stats.win_count;
+  document.getElementById('total-loses').textContent = stats.lose_count;
+  document.getElementById('win-rate').textContent = `${stats.win_rate.toFixed(1)}%`;
+
+  const history = document.getElementById('history-list');
+  history.replaceChildren();
+  if (stats.recent_matches.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'history-empty';
+    empty.textContent = '記録はまだありません。';
+    history.appendChild(empty);
+    return;
+  }
+
+  [...stats.recent_matches].reverse().forEach((match) => {
+    const item = document.createElement('div');
+    item.className = `history-item item-${match.result.toLowerCase()}`;
+    const time = document.createElement('span');
+    time.className = 'time-text';
+    time.textContent = formatTimestamp(match.timestamp);
+    const result = document.createElement('strong');
+    result.textContent = match.result;
+    item.append(time, result);
+    history.appendChild(item);
+  });
 }
 
-// 記録バーのWIN/LOSEボタンで記録
-function recordResult(result) {
-    if (!currentSelectedOpponent || currentSelectedOpponent === "未選択") return;
-    const myChar = document.getElementById('my-char-select').value;
-    matchHistory.push({
-        myChar: myChar,
-        oppChar: currentSelectedOpponent,
-        result: result,
-        timestamp: new Date().getTime()
-    });
-    localStorage.setItem('t8_counter_v4', JSON.stringify(matchHistory));
-    updateDisplay();
-}
-
-// 1件戻す
-function undoLastResult() {
-    if (matchHistory.length === 0) return;
-    matchHistory.pop();
-    localStorage.setItem('t8_counter_v4', JSON.stringify(matchHistory));
-    updateDisplay();
-}
-
-function formatTimestamp(ms) {
-    if (!ms) return "不明";
-    const d = new Date(ms);
-    return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
-}
-
-function updateDisplay() {
-    let wins = 0, loses = 0;
-    const listContainer = document.getElementById('history-list');
-    listContainer.innerHTML = '';
-
-    const maxDisplay = 10;
-    let count = 0;
-
-    for (let i = matchHistory.length - 1; i >= 0; i--) {
-        const match = matchHistory[i];
-        if (match.result === 'WIN') wins++;
-        if (match.result === 'LOSE') loses++;
-
-        if (count < maxDisplay) {
-            const item = document.createElement('div');
-            item.className = 'history-item ' + (match.result === 'WIN' ? 'item-win' : 'item-lose');
-            item.innerHTML =
-                '<div class="char-info">' +
-                '<strong>' + match.oppChar + '</strong>' +
-                '<span class="time-text">(' + formatTimestamp(match.timestamp) + ' / 自分: ' + match.myChar + ')</span>' +
-                '</div>' +
-                '<span><strong>' + match.result + '</strong></span>';
-            listContainer.appendChild(item);
-            count++;
-        }
+async function perform(action, successMessage) {
+  if (busy) return;
+  setBusy(true);
+  setStatus('処理中です…');
+  try {
+    const response = await action();
+    if (response && response.canceled) {
+      setStatus('消去をキャンセルしました。');
+      return;
     }
-
-    const total = wins + loses;
-    const rate = total > 0 ? Math.round((wins / total) * 100) : 0;
-
-    document.getElementById('total-wins').innerText = wins;
-    document.getElementById('total-loses').innerText = loses;
-    document.getElementById('win-rate').innerText = rate + '%';
+    const stats = response && response.result
+      ? response.result.stats
+      : (response && response.stats ? response.stats : response);
+    renderStats(stats);
+    setStatus(successMessage);
+  } catch (error) {
+    setStatus(error.message || String(error), true);
+  } finally {
+    setBusy(false);
+  }
 }
 
-function loadCharacterMemo() {
-    document.getElementById('memo-label').textContent =
-        '対戦相手 [ ' + currentSelectedOpponent + ' ] の対策メモ';
-    document.getElementById('char-memo').value =
-        characterMemos[currentSelectedOpponent] || "";
-}
+document.getElementById('add-win').addEventListener('click', () => {
+  perform(window.matchResults.addWin, 'WINを追加しました。');
+});
+document.getElementById('add-lose').addEventListener('click', () => {
+  perform(window.matchResults.addLose, 'LOSEを追加しました。');
+});
+document.getElementById('undo').addEventListener('click', () => {
+  perform(window.matchResults.undo, '直前の記録を取り消しました。');
+});
+document.getElementById('clear').addEventListener('click', () => {
+  perform(window.matchResults.clear, '全記録を消去しました。');
+});
 
-function saveCharacterMemo() {
-    characterMemos[currentSelectedOpponent] =
-        document.getElementById('char-memo').value;
-    localStorage.setItem('t8_memos_v4', JSON.stringify(characterMemos));
-}
-
-function clearHistory() {
-    document.getElementById('reset-modal').style.display = 'flex';
-}
-
-function closeResetModal() {
-    document.getElementById('reset-modal').style.display = 'none';
-}
-
-function executeReset() {
-    matchHistory = [];
-    localStorage.setItem('t8_counter_v4', JSON.stringify([]));
-    updateDisplay();
-    highlightCurrentOpponent();
-    loadCharacterMemo();
-    closeResetModal();
-}
-
-// グリッド下端ドラッグでリサイズ
-(function () {
-    const charGrid = document.getElementById('char-grid');
-    const EDGE_SIZE = 16; // 下端から何px以内でリサイズモードになるか
-    let isDragging = false;
-    let startY = 0;
-    let startGridH = 0;
-
-    charGrid.addEventListener('mousemove', function (e) {
-        if (isDragging) return;
-        const rect = charGrid.getBoundingClientRect();
-        const nearBottom = e.clientY >= rect.bottom - EDGE_SIZE;
-        charGrid.style.cursor = nearBottom ? 'ns-resize' : '';
-    });
-
-    charGrid.addEventListener('mouseleave', function () {
-        if (!isDragging) charGrid.style.cursor = '';
-    });
-
-    charGrid.addEventListener('mousedown', function (e) {
-        const rect = charGrid.getBoundingClientRect();
-        if (e.clientY < rect.bottom - EDGE_SIZE) return;
-        isDragging = true;
-        startY = e.clientY;
-        startGridH = charGrid.getBoundingClientRect().height;
-        charGrid.style.flex = 'none';
-        document.body.style.userSelect = 'none';
-        document.body.style.cursor = 'ns-resize';
-    });
-
-    document.addEventListener('mousemove', function (e) {
-        if (!isDragging) return;
-        const delta = e.clientY - startY;
-        const newH = Math.max(80, startGridH + delta);
-        charGrid.style.height = newH + 'px';
-    });
-
-    document.addEventListener('mouseup', function () {
-        if (!isDragging) return;
-        isDragging = false;
-        document.body.style.userSelect = '';
-        document.body.style.cursor = '';
-    });
-})();
-
-// --- キャラクターグリッドのドラッグスクロール実装 ---
-(function () {
-    const grid = document.getElementById('char-grid');
-    let isDown = false;
-    let startY;
-    let scrollTop;
-    const EDGE_SIZE = 16; // 下端リサイズ領域のサイズ（既存のコードと同期）
-
-    grid.addEventListener('mousedown', function (e) {
-        const rect = grid.getBoundingClientRect();
-        // 【重要】もしマウス位置が下端リサイズ領域内なら、スクロール処理は無視する
-        if (e.clientY >= rect.bottom - EDGE_SIZE) return;
-
-        isDown = true;
-        // クリックされた位置のY座標と、その時の初期スクロール位置を記憶
-        startY = e.pageY - grid.offsetTop;
-        scrollTop = grid.scrollTop;
-    });
-
-    // マウスがグリッド外に出た、または離されたらドラッグ終了
-    grid.addEventListener('mouseleave', function () { isDown = false; });
-    grid.addEventListener('mouseup', function () { isDown = false; });
-
-    grid.addEventListener('mousemove', function (e) {
-        if (!isDown) return; // マウスが押されていなければ何もしない
-
-        e.preventDefault(); // 予期せぬスクロールバグを防ぐ
-        const y = e.pageY - grid.offsetTop;
-        // 移動量を計算（末尾の数値を大きくするとスクロールが速くなります）
-        const walk = (y - startY) * 1.2;
-
-        // 計算した位置へスクロールを上書き更新
-        grid.scrollTop = scrollTop - walk;
-    });
-})();
-
-// 起動時初期化
-initMyCharacterDropdown();
-initOpponentGrid();
-updateDisplay();
-loadCharacterMemo();
-document.getElementById('record-bar-char').textContent = currentSelectedOpponent;
+perform(window.matchResults.getStats, '戦績を読み込みました。');
