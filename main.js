@@ -3,6 +3,7 @@ const { spawn } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const { AutoTrackerManager, createQuitCoordinator, validateMonitorIndex } = require('./auto_tracker_manager');
+const { findSavedMonitor, loadMonitorSettings, saveMonitorSettings } = require('./monitor_settings');
 
 const ALLOWED_COMMANDS = new Set(['get-stats', 'add-win', 'add-lose', 'undo', 'clear']);
 const MAX_JSON_OUTPUT_BYTES = 1024 * 1024;
@@ -124,6 +125,18 @@ function registerIpcHandlers() {
     return { canceled: false, result: await runResultCommand('clear') };
   });
   ipcMain.handle('auto-tracker:list-monitors', () => listMonitors());
+  ipcMain.handle('monitor-settings:restore', async () => {
+    if (availableMonitors.length === 0) await listMonitors();
+    const savedMonitor = await loadMonitorSettings(app.getPath('userData'));
+    const matchedMonitor = findSavedMonitor(availableMonitors, savedMonitor);
+    return matchedMonitor ? matchedMonitor.index : null;
+  });
+  ipcMain.handle('monitor-settings:save', async (_event, monitorIndex) => {
+    const validIndex = validateMonitorIndex(monitorIndex, availableMonitors);
+    const monitor = availableMonitors.find((candidate) => candidate.index === validIndex);
+    await saveMonitorSettings(app.getPath('userData'), monitor);
+    return { saved: true };
+  });
   ipcMain.handle('auto-tracker:start', async (_event, monitorIndex) => {
     if (availableMonitors.length === 0) await listMonitors();
     const validIndex = validateMonitorIndex(monitorIndex, availableMonitors);
