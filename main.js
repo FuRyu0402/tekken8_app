@@ -158,7 +158,7 @@ function registerIpcHandlers() {
 
 function createWindow() {
   const win = new BrowserWindow({
-    width: 520, height: 820, minWidth: 440, minHeight: 700, maxWidth: 640, autoHideMenuBar: true,
+    width: 520, height: 900, minWidth: 440, minHeight: 780, maxWidth: 640, autoHideMenuBar: true,
     webPreferences: { preload: path.join(__dirname, 'preload.js'), nodeIntegration: false, contextIsolation: true },
   });
   win.loadFile('index.html');
