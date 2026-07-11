@@ -14,6 +14,7 @@ let resultBusy = false;
 let monitorLoading = false;
 let autoUiError = null;
 let autoState = { status: 'stopped', monitorIndex: null, lastError: null, userStopped: false };
+let pollingErrorVisible = false;
 
 const STATUS_LABELS = {
   stopped: '停止中',
@@ -22,6 +23,22 @@ const STATUS_LABELS = {
   stopping: '停止処理中',
   error: '異常終了',
 };
+
+const statsPoller = window.createStatsPoller({
+  fetchStats: window.matchResults.getStats,
+  onStats: (stats) => {
+    renderStats(stats);
+    if (pollingErrorVisible) {
+      pollingErrorVisible = false;
+      setResultStatus('戦績の自動更新が復旧しました。');
+    }
+  },
+  onError: (message) => {
+    pollingErrorVisible = true;
+    setResultStatus(`戦績の自動更新に失敗しました: ${message}`, true);
+  },
+  intervalMs: 1000,
+});
 
 function setResultStatus(message, isError = false) {
   resultStatusElement.textContent = message;
@@ -47,6 +64,7 @@ function applyControls() {
 
 function renderAutoState(state) {
   autoState = state;
+  statsPoller.updateStatus(state.status);
   autoStatusElement.textContent = monitorLoading ? 'モニター取得中' : (STATUS_LABELS[state.status] || state.status);
   const error = state.lastError || autoUiError;
   autoErrorElement.textContent = error || '';
@@ -173,7 +191,10 @@ undoButton.addEventListener('click', () => performResult(window.matchResults.und
 clearButton.addEventListener('click', () => performResult(window.matchResults.clear, '全記録を消去しました。'));
 
 const removeStatusListener = window.matchResults.onAutoTrackerStatus(renderAutoState);
-window.addEventListener('beforeunload', removeStatusListener, { once: true });
+window.addEventListener('beforeunload', () => {
+  statsPoller.destroy();
+  removeStatusListener();
+}, { once: true });
 
 Promise.allSettled([
   window.matchResults.getAutoTrackerStatus().then(renderAutoState),
