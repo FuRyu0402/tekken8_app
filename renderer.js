@@ -1,29 +1,108 @@
-const buttons = Array.from(document.querySelectorAll('button[data-action]'));
-const statusElement = document.getElementById('status');
-let busy = false;
+const resultStatusElement = document.getElementById('status');
+const autoStatusElement = document.getElementById('auto-status');
+const autoErrorElement = document.getElementById('auto-error');
+const monitorSelect = document.getElementById('monitor-select');
+const refreshMonitorsButton = document.getElementById('refresh-monitors');
+const startButton = document.getElementById('start-auto-tracker');
+const stopButton = document.getElementById('stop-auto-tracker');
+const addWinButton = document.getElementById('add-win');
+const addLoseButton = document.getElementById('add-lose');
+const undoButton = document.getElementById('undo');
+const clearButton = document.getElementById('clear');
 
-function setBusy(value) {
-  busy = value;
-  buttons.forEach((button) => { button.disabled = value; });
-  document.body.classList.toggle('is-busy', value);
+let resultBusy = false;
+let monitorLoading = false;
+let autoUiError = null;
+let autoState = { status: 'stopped', monitorIndex: null, lastError: null, userStopped: false };
+
+const STATUS_LABELS = {
+  stopped: '停止中',
+  starting: '起動中',
+  running: '自動判定中',
+  stopping: '停止処理中',
+  error: '異常終了',
+};
+
+function setResultStatus(message, isError = false) {
+  resultStatusElement.textContent = message;
+  resultStatusElement.classList.toggle('status-error', isError);
 }
 
-function setStatus(message, isError = false) {
-  statusElement.textContent = message;
-  statusElement.classList.toggle('status-error', isError);
+function applyControls() {
+  const status = autoState.status;
+  const running = status === 'starting' || status === 'running';
+  const stopping = status === 'stopping';
+  const idle = status === 'stopped' || status === 'error';
+  const hasMonitor = monitorSelect.value !== '';
+
+  monitorSelect.disabled = resultBusy || monitorLoading || !idle;
+  refreshMonitorsButton.disabled = resultBusy || monitorLoading || !idle;
+  startButton.disabled = resultBusy || monitorLoading || !idle || !hasMonitor;
+  stopButton.disabled = resultBusy || stopping || !running;
+  addWinButton.disabled = resultBusy || stopping;
+  addLoseButton.disabled = resultBusy || stopping;
+  undoButton.disabled = resultBusy || running || stopping;
+  clearButton.disabled = resultBusy || running || stopping;
 }
 
-function formatTimestamp(value) {
-  if (!value) return '日時なし';
-  return value;
+function renderAutoState(state) {
+  autoState = state;
+  autoStatusElement.textContent = monitorLoading ? 'モニター取得中' : (STATUS_LABELS[state.status] || state.status);
+  const error = state.lastError || autoUiError;
+  autoErrorElement.textContent = error || '';
+  autoErrorElement.hidden = !error;
+  applyControls();
 }
+
+function formatMonitor(monitor) {
+  const primary = monitor.is_primary ? '・メイン' : '';
+  const name = monitor.name ? `・${monitor.name}` : '';
+  return `モニター ${monitor.index} — ${monitor.width}×${monitor.height}（left: ${monitor.left}, top: ${monitor.top}）${primary}${name}`;
+}
+
+async function loadMonitors() {
+  if (monitorLoading) return;
+  monitorLoading = true;
+  autoUiError = null;
+  renderAutoState(autoState);
+  const previous = monitorSelect.value;
+  try {
+    const monitors = await window.matchResults.listMonitors();
+    monitorSelect.replaceChildren();
+    for (const monitor of monitors) {
+      const option = document.createElement('option');
+      option.value = String(monitor.index);
+      option.textContent = formatMonitor(monitor);
+      monitorSelect.appendChild(option);
+    }
+    if (monitors.length === 0) {
+      const option = document.createElement('option');
+      option.value = '';
+      option.textContent = '利用可能な個別モニターがありません';
+      monitorSelect.appendChild(option);
+    } else if ([...monitorSelect.options].some((option) => option.value === previous)) {
+      monitorSelect.value = previous;
+    }
+  } catch (error) {
+    monitorSelect.replaceChildren();
+    const option = document.createElement('option');
+    option.value = '';
+    option.textContent = 'モニター一覧を取得できませんでした';
+    monitorSelect.appendChild(option);
+    autoUiError = error.message || String(error);
+  } finally {
+    monitorLoading = false;
+    renderAutoState(autoState);
+  }
+}
+
+function formatTimestamp(value) { return value || '日時なし'; }
 
 function renderStats(stats) {
   document.getElementById('total-matches').textContent = stats.total_matches;
   document.getElementById('total-wins').textContent = stats.win_count;
   document.getElementById('total-loses').textContent = stats.lose_count;
   document.getElementById('win-rate').textContent = `${stats.win_rate.toFixed(1)}%`;
-
   const history = document.getElementById('history-list');
   history.replaceChildren();
   if (stats.recent_matches.length === 0) {
@@ -33,7 +112,6 @@ function renderStats(stats) {
     history.appendChild(empty);
     return;
   }
-
   [...stats.recent_matches].reverse().forEach((match) => {
     const item = document.createElement('div');
     item.className = `history-item item-${match.result.toLowerCase()}`;
@@ -47,39 +125,58 @@ function renderStats(stats) {
   });
 }
 
-async function perform(action, successMessage) {
-  if (busy) return;
-  setBusy(true);
-  setStatus('処理中です…');
+async function performResult(action, successMessage) {
+  if (resultBusy) return;
+  resultBusy = true;
+  applyControls();
+  setResultStatus('処理中です…');
   try {
     const response = await action();
     if (response && response.canceled) {
-      setStatus('消去をキャンセルしました。');
+      setResultStatus('消去をキャンセルしました。');
       return;
     }
     const stats = response && response.result
       ? response.result.stats
       : (response && response.stats ? response.stats : response);
     renderStats(stats);
-    setStatus(successMessage);
+    setResultStatus(successMessage);
   } catch (error) {
-    setStatus(error.message || String(error), true);
+    setResultStatus(error.message || String(error), true);
   } finally {
-    setBusy(false);
+    resultBusy = false;
+    applyControls();
   }
 }
 
-document.getElementById('add-win').addEventListener('click', () => {
-  perform(window.matchResults.addWin, 'WINを追加しました。');
+refreshMonitorsButton.addEventListener('click', loadMonitors);
+monitorSelect.addEventListener('change', applyControls);
+startButton.addEventListener('click', async () => {
+  try {
+    autoUiError = null;
+    renderAutoState({ ...autoState, status: 'starting', lastError: null });
+    await window.matchResults.startAutoTracker(Number(monitorSelect.value));
+  } catch (error) {
+    autoUiError = error.message || String(error);
+    renderAutoState(await window.matchResults.getAutoTrackerStatus());
+  }
 });
-document.getElementById('add-lose').addEventListener('click', () => {
-  perform(window.matchResults.addLose, 'LOSEを追加しました。');
+stopButton.addEventListener('click', async () => {
+  try { await window.matchResults.stopAutoTracker(); } catch (error) {
+    autoUiError = error.message || String(error);
+    renderAutoState(await window.matchResults.getAutoTrackerStatus());
+  }
 });
-document.getElementById('undo').addEventListener('click', () => {
-  perform(window.matchResults.undo, '直前の記録を取り消しました。');
-});
-document.getElementById('clear').addEventListener('click', () => {
-  perform(window.matchResults.clear, '全記録を消去しました。');
-});
+addWinButton.addEventListener('click', () => performResult(window.matchResults.addWin, 'WINを追加しました。'));
+addLoseButton.addEventListener('click', () => performResult(window.matchResults.addLose, 'LOSEを追加しました。'));
+undoButton.addEventListener('click', () => performResult(window.matchResults.undo, '直前の記録を取り消しました。'));
+clearButton.addEventListener('click', () => performResult(window.matchResults.clear, '全記録を消去しました。'));
 
-perform(window.matchResults.getStats, '戦績を読み込みました。');
+const removeStatusListener = window.matchResults.onAutoTrackerStatus(renderAutoState);
+window.addEventListener('beforeunload', removeStatusListener, { once: true });
+
+Promise.allSettled([
+  window.matchResults.getAutoTrackerStatus().then(renderAutoState),
+  loadMonitors(),
+  performResult(window.matchResults.getStats, '戦績を読み込みました。'),
+]);

@@ -4,6 +4,7 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
+    "test": "node --test test_auto_tracker_manager.js",
     "package": "electron-packager . tekken8-stats-app --platform=win32 --arch=x64 --overwrite"
   },
   "devDependencies": {
