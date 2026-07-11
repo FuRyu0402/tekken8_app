@@ -36,7 +36,7 @@
     .status { min-height: 2.5em; margin: 11px 0; padding: 8px; border-radius: 6px; background: #1e1e24; color: #a8c7fa; font-size: .78rem; }
     .status-error { color: #ff8d98; }
     .history-title { border-bottom: 2px solid #3e3e50; padding-bottom: 5px; }
-    .history-list { display: flex; flex-direction: column; gap: 5px; margin-top: 8px; }
+    .history-list { display: flex; flex-direction: column; gap: 5px; height: clamp(120px, 17vh, 145px); margin-top: 8px; overflow-x: hidden; overflow-y: auto; }
     .history-item { align-items: center; background: #1e1e24; border-left: 4px solid #3e3e50; border-radius: 5px; display: flex; justify-content: space-between; padding: 7px 9px; }
     .item-win { border-left-color: #2ed573; } .item-lose { border-left-color: #ff4757; }
     .time-text, .history-empty { color: #90909f; font-size: .74rem; }
